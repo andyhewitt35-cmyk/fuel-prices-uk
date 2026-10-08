@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<meta name="theme-color" content="#13294b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="UK fuel">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>UK fuel prices</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="favicon.png">
+<script>
+window.__t0 = performance.now();
+window.__dataP = fetch("data.json", {cache: "no-cache"}).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); });
+</script>
+<link rel="preconnect" href="https://unpkg.com" crossorigin>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" crossorigin="">
+<script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script defer src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js" crossorigin=""></script>
+<style>
+:root{--bg:#f4f5f7;--card:#fff;--ink:#1d2330;--mute:#636b7a;--line:#e2e5ea;--acc:#0b5cad;--ok:#1a7f37;--warn:#b35900;--bad:#b42318;--navy:#13294b}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:var(--navy);color:#fff;padding:12px 16px 8px;padding-top:max(12px,env(safe-area-inset-top))}
+header h1{margin:0;font-size:20px}
+header p{margin:3px 0 0;font-size:13px;opacity:.85}
+.fuelbar{position:sticky;top:0;z-index:1000;background:var(--navy);padding:4px 12px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.fuelbar button{min-height:52px;border:0;background:#2a4572;color:#fff;font-weight:600;line-height:1.15;padding:6px 4px;border-radius:8px;font-size:15px}
+.fuelbar button small{display:block;font-weight:400;font-size:12px;opacity:.85}
+.fuelbar button.on{background:#fff;color:var(--navy)}
+main{max-width:1200px;margin:0 auto;padding:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:12px}
+h2{font-size:16px;margin:0 0 8px}
+button{font:inherit;border:1px solid #c5cbd5;background:#fff;color:var(--ink);border-radius:8px;padding:8px 12px;cursor:pointer;min-height:44px}
+button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+input[type=text],input[type=search]{font:inherit;font-size:16px;padding:8px 10px;border:1px solid #c5cbd5;border-radius:8px;background:#fff;min-width:0;min-height:44px}
+.note{font-size:13px;color:var(--mute)}
+.err{color:var(--bad)}
+#nearBtn{width:100%;min-height:56px;font-size:19px;font-weight:700;background:var(--acc);color:#fff;border:0}
+.searchrow{display:flex;gap:8px;margin-top:8px}.searchrow input{flex:1}
+.rad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:8px}
+.rad button{padding:6px 2px}
+#placeLine{margin-top:8px;font-size:14px}
+#placeLine a{color:var(--acc);margin-left:6px}
+#prompt{background:#eef5ff;border:1px solid #c9dcf5;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+#staleBanner{background:#fff4e5;border:1px solid #f0c27a;color:#7a4100;border-radius:10px;padding:10px 12px;margin-bottom:12px}
+#loading{padding:30px;text-align:center;color:var(--mute)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid>*{min-width:0}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+ol.top{margin:0;padding:0;list-style:none;counter-reset:t}
+ol.top li{display:flex;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer}
+ol.top li:first-child{border-top:0}
+ol.top li::before{counter-increment:t;content:counter(t);font-weight:700;color:var(--mute);width:16px}
+.pbig{font-size:20px;font-weight:700;min-width:74px}
+.tinfo{flex:1;min-width:0}.tinfo b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tinfo span{font-size:13px;color:var(--mute)}
+.dist{font-size:13px;white-space:nowrap;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+.stats div{background:#f7f8fa;border-radius:8px;padding:8px}
+.stats b{display:block;font-size:20px}
+.stats span{font-size:12px;color:var(--mute)}
+table{width:100%;border-collapse:collapse}
+.mini{font-size:13px}.mini td,.mini th{padding:6px;border-bottom:1px solid var(--line);text-align:right}.mini td:first-child,.mini th:first-child{text-align:left}
+.mini tr.sel td{font-weight:700}
+.mini tr.tot td{font-weight:700;background:#f7f8fa}
+table.all{font-size:14px}
+table.all th,table.all td{padding:8px 7px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.all th{background:#f7f8fa;position:sticky;top:0;cursor:pointer;user-select:none;white-space:nowrap;font-size:13px}
+table.all th.sorted::after{content:" ▲";font-size:10px}
+table.all th.sorted.desc::after{content:" ▼"}
+table.all td.p{font-weight:700;white-space:nowrap}
+table.all tbody tr{cursor:pointer}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:middle;border:1px solid rgba(0,0,0,.25)}
+.stale{color:var(--warn)}
+.sub{display:none;font-size:12px;color:var(--mute)}
+#more{width:100%;margin-top:10px}
+#map{height:430px;border-radius:8px;border:1px solid var(--line);background:#e8ecf0}
+.cl{background:#fff;border:2px solid;border-radius:14px;font:700 12px/1 -apple-system,Roboto,Arial,sans-serif;padding:5px 6px;white-space:nowrap;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.cl small{display:block;font-weight:400;font-size:10px;color:#555;margin-top:2px}
+.src li{margin:3px 0}.ok{color:var(--ok)}.fail{color:var(--bad)}.old{color:var(--warn)}
+.leaflet-popup-content{font-size:13px;line-height:1.4}
+.leaflet-popup-content table td{padding:1px 6px 1px 0}
+details summary{cursor:pointer;padding:6px 0}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:6px 0}
+@media(max-width:640px){
+  main{padding:8px}.card{padding:10px}
+  .col-town,.col-pc,.col-reg,.col-upd{display:none}
+  .sub{display:block}
+  #map{height:340px}
+  table.all{font-size:13px}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>UK fuel prices</h1>
+  <p id="hdr">Loading prices…</p>
+</header>
+<nav class="fuelbar" id="fuelBtns" aria-label="Fuel type"></nav>
+<main>
+  <div id="staleBanner" hidden></div>
+
+  <section class="card" id="locCard">
+    <button id="nearBtn">📍 Near me</button>
+    <div class="searchrow">
+      <input type="text" id="placeInput" placeholder="…or postcode / town" aria-label="Postcode or town" autocomplete="postal-code" enterkeyhint="search">
+      <button id="placeGo">Go</button>
+    </div>
+    <div id="placeLine" class="note"></div>
+    <div class="rad" id="radBtns" aria-label="Distance" hidden></div>
+  </section>
+
+  <div id="prompt">Tap <b>📍 Near me</b> or type a postcode to see the cheapest fuel near you. Until then, this page shows the whole UK.</div>
+  <div id="loading">Loading about 8,000 stations…</div>
+
+  <div class="grid" id="content" hidden>
+    <section class="card" id="topCard" hidden>
+      <h2 id="topTitle">Cheapest nearby</h2>
+      <ol class="top" id="top5"></ol>
+    </section>
+    <section class="card">
+      <h2 id="statTitle">UK</h2>
+      <div class="stats" id="stats"></div>
+      <table class="mini" id="fuelStats" style="margin-top:10px"></table>
+    </section>
+    <section class="card" id="regCard">
+      <h2 id="regTitle">By region</h2>
+      <table class="mini" id="regTable"></table>
+      <details id="areaBox"><summary class="note">By postcode area (cheapest average first)</summary><table class="mini" id="areaTable"></table></details>
+    </section>
+  </div>
+
+  <section class="card" id="mapCard" hidden>
+    <h2>Map <span class="note">(green = cheaper, red = dearer, of the stations shown; bubbles show the cheapest price inside)</span></h2>
+    <div id="map"></div>
+  </section>
+
+  <section class="card" id="listCard" hidden>
+    <h2 id="tblTitle">Stations</h2>
+    <div class="row">
+      <input type="search" id="search" placeholder="Filter by town, postcode or brand" style="flex:1;min-width:200px">
+      <label class="note"><input type="checkbox" id="freshOnly"> Only prices changed in the last 7 days</label>
+    </div>
+    <table class="all" id="tbl">
+      <thead><tr>
+        <th data-k="price">Price</th>
+        <th data-k="brand">Brand</th>
+        <th data-k="name">Station</th>
+        <th data-k="town" class="col-town">Town</th>
+        <th data-k="pc" class="col-pc">Postcode</th>
+        <th data-k="region" class="col-reg">Region</th>
+        <th data-k="dist">Miles</th>
+        <th data-k="t" class="col-upd">Last updated</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table>
+    <button id="more" hidden>Show 100 more</button>
+  </section>
+
+  <section class="card" id="srcCard" hidden>
+    <h2>Where the prices come from</h2>
+    <ul class="src" id="srcList"></ul>
+    <p class="note" id="footNote"></p>
+    <details id="rejBox"><summary class="note">Prices left out as obviously wrong</summary><ul class="note" id="rejList"></ul></details>
+  </section>
+</main>
+<script>
+(function () {
+"use strict";
+const FUELS = {E10: "Unleaded (E10)", E5: "Super unleaded (E5)", B7: "Diesel", SDV: "Premium diesel"};
+const SHORT = {E10: "Unleaded", E5: "Super", B7: "Diesel", SDV: "Premium diesel"};
+const BTN = {E10: ["Unleaded", "E10"], E5: ["Super", "E5"], B7: ["Diesel", "B7"], SDV: ["Premium", "diesel"]};
+const RADII = [5, 10, 25, 50, 0];
+const ZOOM = {5: 12, 10: 11, 25: 10, 50: 9, 0: 8};
+const PAGE = 100;
+const WEEK = 7 * 864e5;
+const LS = "ukFuelPlace";
+const S = {fuel: "E10", place: null, radius: 10, q: "", fresh: false, sort: "price", desc: false, limit: PAGE};
+let D = null, st = [], now = Date.now();
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c]));
+const fmtP = p => p.toFixed(1) + "p";
+const label = s => (s.brand === "Independent" || s.name.toLowerCase().includes(s.brand.toLowerCase())) ? s.name : s.brand + " – " + s.name;
+function miles(a, b, c, d) { const r = 3958.8, t = Math.PI / 180, x = Math.sin((c - a) * t / 2) ** 2 + Math.cos(a * t) * Math.cos(c * t) * Math.sin((d - b) * t / 2) ** 2; return 2 * r * Math.asin(Math.sqrt(x)); }
+const dayFmt = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/London"});
+const hmFmt = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/London", hour: "2-digit", minute: "2-digit"});
+const fullFmt = new Intl.DateTimeFormat("en-GB", {timeZone: "Europe/London", weekday: "short", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"});
+function age(t) {
+  if (!t) return {txt: "unknown", full: "unknown", stale: true, fresh: false};
+  const ms = now - t, d = dayFmt.format(t);
+  let txt;
+  if (d === dayFmt.format(now)) txt = "today " + hmFmt.format(t);
+  else if (d === dayFmt.format(now - 864e5)) txt = "yesterday " + hmFmt.format(t);
+  else txt = Math.max(2, Math.round(ms / 864e5)) + " days ago";
+  return {txt, full: fullFmt.format(t) + " UK", stale: ms > 2 * WEEK, fresh: ms <= WEEK};
+}
+const colour = f => "hsl(" + Math.round(120 * (1 - Math.max(0, Math.min(1, f)))) + ",75%,40%)";
+function msg(t, bad) { $("placeLine").innerHTML = ""; $("placeLine").textContent = t; $("placeLine").className = bad ? "err" : "note"; }
+
+// ---------- fuel + radius buttons ----------
+Object.keys(FUELS).forEach(f => {
+  const b = document.createElement("button"); b.innerHTML = BTN[f][0] + "<small>" + BTN[f][1] + "</small>"; b.dataset.f = f; b.setAttribute("aria-label", FUELS[f]);
+  if (f === S.fuel) b.className = "on";
+  b.onclick = () => { S.fuel = f; S.limit = PAGE; [...$("fuelBtns").children].forEach(x => x.classList.toggle("on", x === b)); render(false); };
+  $("fuelBtns").appendChild(b);
+});
+RADII.forEach(r => {
+  const b = document.createElement("button"); b.textContent = r ? r + " mi" : "All UK"; b.dataset.r = r; if (r === S.radius) b.className = "on";
+  b.onclick = () => { S.radius = r; S.limit = PAGE; [...$("radBtns").children].forEach(x => x.classList.toggle("on", x === b)); render(true); };
+  $("radBtns").appendChild(b);
+});
+
+// ---------- location ----------
+function setPlace(p, save) {
+  S.place = p; S.limit = PAGE; window.__placeSeq = (window.__placeSeq || 0) + 1;
+  if (p && S.sort === "price") S.sort = "price";
+  if (save && p) try { localStorage.setItem(LS, JSON.stringify(p)); } catch (e) {}
+  showPlaceLine();
+  if (D) { for (const s of st) s.d = (p && s.lat != null) ? miles(p.lat, p.lon, s.lat, s.lon) : null; render(true); }
+}
+function showPlaceLine() {
+  const p = S.place;
+  $("radBtns").hidden = !p; $("prompt").hidden = !!p;
+  if (!p) { msg(""); return; }
+  $("placeLine").className = "note";
+  $("placeLine").innerHTML = "Showing distances from <b>" + esc(p.name) + "</b>" + (p.saved ? " (last used)" : "") + " <a href='#' id='clearPlace'>clear</a>";
+  $("clearPlace").onclick = e => { e.preventDefault(); try { localStorage.removeItem(LS); } catch (x) {} setPlace(null); };
+}
+$("nearBtn").onclick = () => {
+  if (!navigator.geolocation) { msg("This browser can't share your location. Type a postcode instead.", true); return; }
+  msg("Finding your location…");
+  navigator.geolocation.getCurrentPosition(pos => {
+    const p = {name: "your location", lat: +pos.coords.latitude.toFixed(4), lon: +pos.coords.longitude.toFixed(4)};
+    setPlace(p, true);
+    // friendly name (nearest postcode), best effort
+    fetch("https://api.postcodes.io/postcodes?lon=" + p.lon + "&lat=" + p.lat + "&limit=1").then(r => r.json()).then(j => {
+      const x = j && j.result && j.result[0]; if (x && S.place === p) { p.name = x.postcode + " (your location)"; try { localStorage.setItem(LS, JSON.stringify(p)); } catch (e) {} showPlaceLine(); render(false); }
+    }).catch(() => {});
+  }, e => msg((e.code === 1 ? "Location permission was refused" : "Couldn't get your location") + ". Type a postcode instead.", true),
+  {enableHighAccuracy: false, timeout: 15000, maximumAge: 0});
+};
+async function lookup(raw) {
+  raw = raw.trim(); if (!raw) return;
+  const pc = raw.toUpperCase().replace(/\s+/g, "");
+  msg("Looking up " + raw + "…");
+  try {
+    let url;
+    if (/^[A-Z]{1,2}\d[A-Z\d]?\d[A-Z]{2}$/.test(pc)) url = "https://api.postcodes.io/postcodes/" + pc;
+    else if (/^[A-Z]{1,2}\d[A-Z\d]?$/.test(pc)) url = "https://api.postcodes.io/outcodes/" + pc;
+    else url = "https://api.postcodes.io/places?limit=10&q=" + encodeURIComponent(raw);
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), 7000);
+    const r = await fetch(url, {signal: ctl.signal}); clearTimeout(tm);
+    if (r.ok) {
+      const j = await r.json(); let x = j.result;
+      if (Array.isArray(x)) { const w = raw.toLowerCase(); x = x.find(p => (p.name_1 || "").toLowerCase() === w && /^(Town|City|Village|Suburban Area|Hamlet)/i.test(p.local_type || "")) || x.find(p => /^(Town|City)/i.test(p.local_type || "")) || x[0]; }
+      if (x && x.latitude) {
+        const area = x.county_unitary || x.region || "";
+        const name = x.name_1 ? (area && !area.includes(x.name_1) ? x.name_1 + ", " + area : x.name_1) : (x.postcode || x.outcode);
+        setPlace({name, lat: x.latitude, lon: x.longitude}, true); return;
+      }
+    }
+  } catch (e) { /* offline or blocked: fall back */ }
+  if (D) {
+    const up = raw.toUpperCase();
+    let m = st.filter(s => s.lat != null && s.pc.replace(/\s/g, "") === pc);
+    if (!m.length) m = st.filter(s => s.lat != null && s.pc.split(" ")[0] === pc);
+    if (!m.length) m = st.filter(s => s.lat != null && s.town.toUpperCase() === up);
+    if (m.length) { setPlace({name: up + " (approx.)", lat: m.reduce((a, s) => a + s.lat, 0) / m.length, lon: m.reduce((a, s) => a + s.lon, 0) / m.length}, true); return; }
+  }
+  msg("Couldn't find \"" + raw + "\". Try a full postcode like M1 1AE.", true);
+}
+$("placeGo").onclick = () => lookup($("placeInput").value);
+$("placeInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.target.blur(); lookup(e.target.value); } });
+let qt; $("search").addEventListener("input", e => { clearTimeout(qt); qt = setTimeout(() => { S.q = e.target.value.trim().toLowerCase(); S.limit = PAGE; render(false); }, 200); });
+$("freshOnly").onchange = e => { S.fresh = e.target.checked; S.limit = PAGE; render(false); };
+document.querySelectorAll("#tbl th").forEach(th => th.onclick = () => { const k = th.dataset.k; if (S.sort === k) S.desc = !S.desc; else { S.sort = k; S.desc = (k === "t"); } S.limit = PAGE; renderTable(); });
+$("more").onclick = () => { S.limit += PAGE; renderTable(); };
+
+// restore last place
+try { const p = JSON.parse(localStorage.getItem(LS) || "null"); if (p && isFinite(p.lat) && isFinite(p.lon)) { p.saved = true; S.place = p; } } catch (e) {}
+showPlaceLine();
+
+// ---------- data ----------
+let list = [], prices = [], cache = {};
+function dec(x) { return x ? {p: x[0] / 10, t: x[1] * 60000, src: D.src[x[2]]} : null; }
+function stats(vals) { if (!vals.length) return null; let mn = 1e9, mx = 0, sum = 0; for (const v of vals) { sum += v; if (v < mn) mn = v; if (v > mx) mx = v; } return {n: vals.length, avg: sum / vals.length, min: mn, max: mx}; }
+function fuelCache(f) {
+  if (cache[f]) return cache[f];
+  const uk = [], reg = {}, area = {}, nat = {};
+  for (const s of st) {
+    const p = s.P[f]; if (!p) continue;
+    uk.push(p.p);
+    (reg[s.region] = reg[s.region] || []).push(s);
+    const a = (s.pc.match(/^[A-Z]{1,2}/) || ["?"])[0]; (area[a] = area[a] || []).push(s);
+    (nat[s.nation] = nat[s.nation] || []).push(p.p);
+  }
+  const summ = arr => { const best = arr.reduce((b, s) => (!b || s.P[f].p < b.P[f].p) ? s : b, null); const x = stats(arr.map(s => s.P[f].p)); x.best = best; return x; };
+  const regions = D.regions.filter(r => reg[r]).map(r => Object.assign({name: r}, summ(reg[r])));
+  const areas = Object.keys(area).map(a => { const x = summ(area[a]); const towns = {}; area[a].forEach(s => { if (s.town) towns[s.town] = (towns[s.town] || 0) + 1; }); x.name = a; x.town = Object.keys(towns).sort((p, q) => towns[q] - towns[p])[0] || ""; return x; }).sort((p, q) => p.avg - q.avg);
+  return cache[f] = {uk: stats(uk), regions, areas, nations: Object.keys(nat).map(n => Object.assign({name: n}, stats(nat[n])))};
+}
+
+function filtered() {
+  const f = S.fuel, q = S.q, out = [];
+  for (const s of st) {
+    const p = s.P[f]; if (!p) continue;
+    if (S.place && S.radius && (s.d == null || s.d > S.radius)) continue;
+    if (S.fresh && !(p.t && now - p.t <= WEEK)) continue;
+    if (q && !s.hay.includes(q)) continue;
+    out.push(s);
+  }
+  return out;
+}
+let lo = 0, hi = 0;
+function frac(p) { // rank-based colour position
+  const n = prices.length; if (n < 2) return 0;
+  let a = 0, b = n; while (a < b) { const m = (a + b) >> 1; if (prices[m] < p) a = m + 1; else b = m; }
+  let e = a; while (e < n && prices[e] === p) e++;
+  return ((a + e - 1) / 2) / (n - 1);
+}
+function where() { return S.place ? (S.radius ? "within " + S.radius + " miles of " + S.place.name : "in the UK, nearest to " + S.place.name) : "in the UK"; }
+
+function render(moveMap) {
+  const f = S.fuel; now = Date.now();
+  list = filtered();
+  prices = list.map(s => s.P[f].p).sort((a, b) => a - b);
+  // cheapest 5
+  $("topCard").hidden = !S.place;
+  if (S.place) {
+    const top = [...list].sort((a, b) => a.P[f].p - b.P[f].p || (a.d || 0) - (b.d || 0)).slice(0, 5);
+    $("topTitle").textContent = "Cheapest " + SHORT[f].toLowerCase() + " " + where();
+    const ol = $("top5"); ol.innerHTML = "";
+    if (!top.length) ol.innerHTML = "<li class='note'>No stations match. Try a bigger distance.</li>";
+    top.forEach(s => { const p = s.P[f], a = age(p.t); const li = document.createElement("li");
+      li.innerHTML = "<div class='pbig' style='color:" + colour(frac(p.p)) + "'>" + fmtP(p.p) + "</div><div class='tinfo'><b>" + esc(label(s)) + "</b><span>" + esc(s.town) + " " + esc(s.pc) + " · <span class='" + (a.stale ? "stale" : "") + "' title='" + esc(a.full) + "'>price set " + esc(a.txt) + "</span></span></div><div class='dist'>" + (s.d != null ? s.d.toFixed(1) + " mi" : "") + "</div>";
+      li.onclick = () => focus(s); ol.appendChild(li); });
+    window.__top = top.map(s => ({name: s.name, brand: s.brand, town: s.town, pc: s.pc, p: s.P[f].p, d: s.d && +s.d.toFixed(1), region: s.region}));
+  } else window.__top = [];
+  renderStats(); renderTable(); renderMap(moveMap);
+  window.__state = {fuel: f, count: list.length, place: S.place && S.place.name, radius: S.radius};
+}
+function renderStats() {
+  const f = S.fuel, c = fuelCache(f), g = c.uk;
+  $("statTitle").textContent = SHORT[f] + " across the UK";
+  $("stats").innerHTML = g ? "<div><b>" + fmtP(g.avg) + "</b><span>UK average</span></div><div><b style='color:var(--ok)'>" + fmtP(g.min) + "</b><span>lowest</span></div><div><b style='color:var(--bad)'>" + fmtP(g.max) + "</b><span>highest</span></div>" : "<div>No data</div>";
+  let h = "<tr><th>Fuel</th><th>Average</th><th>Lowest</th><th>Highest</th><th>Stations</th></tr>";
+  Object.keys(FUELS).forEach(k => { const x = fuelCache(k).uk; if (!x) return; h += "<tr" + (k === f ? " class='sel'" : "") + "><td>" + SHORT[k] + "</td><td>" + fmtP(x.avg) + "</td><td>" + fmtP(x.min) + "</td><td>" + fmtP(x.max) + "</td><td>" + x.n.toLocaleString() + "</td></tr>"; });
+  if (prices.length && (S.place || S.q || S.fresh)) { const avg = prices.reduce((a, b) => a + b, 0) / prices.length; h += "<tr><td colspan='5' style='text-align:left;color:#636b7a'>Shown now (" + esc(where()) + "): " + prices.length + " stations, average " + fmtP(avg) + ", " + fmtP(prices[0]) + " to " + fmtP(prices[prices.length - 1]) + "</td></tr>"; }
+  $("fuelStats").innerHTML = h;
+  $("regTitle").textContent = SHORT[f] + " by region";
+  const myReg = S.place ? (st.reduce((b, s) => s.d != null && (!b || s.d < b.d) ? s : b, null) || {}).region : null;
+  let r = "<tr><th>Region</th><th>Average</th><th>Cheapest</th><th>Where</th></tr>";
+  c.regions.forEach(x => { r += "<tr" + (x.name === myReg ? " class='sel'" : "") + "><td>" + esc(x.name) + "</td><td>" + fmtP(x.avg) + "</td><td>" + fmtP(x.min) + "</td><td class='note'>" + esc(x.best.town || x.best.pc) + "</td></tr>"; });
+  c.nations.sort((a, b) => a.name.localeCompare(b.name)).forEach(x => { if (x.name === "England") r += "<tr class='tot'><td>England</td><td>" + fmtP(x.avg) + "</td><td>" + fmtP(x.min) + "</td><td></td></tr>"; });
+  r += "<tr class='tot'><td>UK</td><td>" + fmtP(g.avg) + "</td><td>" + fmtP(g.min) + "</td><td class='note'>" + g.n.toLocaleString() + " stations</td></tr>";
+  $("regTable").innerHTML = r;
+  if ($("areaBox").open) renderAreas();
+}
+function renderAreas() {
+  const c = fuelCache(S.fuel);
+  let h = "<tr><th>Area</th><th>Average</th><th>Cheapest</th><th>Stations</th></tr>";
+  c.areas.forEach(x => { h += "<tr><td>" + esc(x.name) + " <span class='note'>" + esc(x.town) + "</span></td><td>" + fmtP(x.avg) + "</td><td>" + fmtP(x.min) + "</td><td>" + x.n + "</td></tr>"; });
+  $("areaTable").innerHTML = h;
+}
+$("areaBox").addEventListener("toggle", () => { if ($("areaBox").open) renderAreas(); });
+
+function renderTable() {
+  const f = S.fuel, k = S.sort, dir = S.desc ? -1 : 1;
+  const v = s => k === "price" ? s.P[f].p : k === "dist" ? (s.d == null ? 1e9 : s.d) : k === "t" ? (s.P[f].t || 0) : (s[k] || "").toLowerCase();
+  list.sort((a, b) => { const x = v(a), y = v(b); return (x < y ? -1 : x > y ? 1 : 0) * dir || (a.P[f].p - b.P[f].p) || ((a.d || 0) - (b.d || 0)); });
+  document.querySelectorAll("#tbl th").forEach(th => { th.classList.toggle("sorted", th.dataset.k === S.sort); th.classList.toggle("desc", th.dataset.k === S.sort && S.desc); });
+  $("tblTitle").textContent = FUELS[f] + ": " + list.length.toLocaleString() + " stations " + where() + (S.q ? " matching \"" + S.q + "\"" : "");
+  const rows = [];
+  const shown = list.slice(0, S.limit);
+  for (const s of shown) {
+    const p = s.P[f], a = age(p.t);
+    rows.push("<tr data-i='" + s.i + "'><td class='p'><span class='dot' style='background:" + colour(frac(p.p)) + "'></span>" + fmtP(p.p) + "</td><td>" + esc(s.brand) + "</td><td>" + esc(s.name) + "<div class='sub'>" + esc(s.town) + " " + esc(s.pc) + " · <span class='" + (a.stale ? "stale" : "") + "'>" + esc(a.txt) + "</span></div></td><td class='col-town'>" + esc(s.town) + "</td><td class='col-pc' style='white-space:nowrap'>" + esc(s.pc) + "</td><td class='col-reg'>" + esc(s.region) + "</td><td>" + (s.d != null ? s.d.toFixed(1) : "") + "</td><td class='col-upd " + (a.stale ? "stale" : "") + "' title='" + esc(a.full) + "'>" + esc(a.txt) + "</td></tr>");
+  }
+  if (!shown.length) rows.push("<tr><td colspan='8' class='note'>No stations match." + (S.place && S.radius ? " Try a bigger distance or All UK." : "") + "</td></tr>");
+  document.querySelector("#tbl tbody").innerHTML = rows.join("");
+  $("more").hidden = list.length <= S.limit;
+  $("more").textContent = "Show " + Math.min(PAGE, list.length - S.limit) + " more (" + (list.length - S.limit).toLocaleString() + " left)";
+}
+document.querySelector("#tbl tbody").addEventListener("click", e => { const tr = e.target.closest("tr[data-i]"); if (tr) focus(st[+tr.dataset.i]); });
+
+// ---------- map (lazy: built when scrolled into view) ----------
+let map = null, cluster = null, here = null, markers = [], mapWanted = false;
+function popup(s) {
+  let h = "<b>" + esc(s.brand) + "</b> – " + esc(s.name) + "<br>" + esc(s.addr) + (s.town ? ", " + esc(s.town) : "") + " " + esc(s.pc) + "<br>";
+  if (s.d != null) h += s.d.toFixed(1) + " miles from " + esc(S.place.name) + "<br>";
+  h += "<table>";
+  Object.keys(FUELS).forEach(f => { const p = s.P[f]; if (!p) return; const a = age(p.t);
+    h += "<tr><td>" + (f === S.fuel ? "<b>" + SHORT[f] + "</b>" : SHORT[f]) + "</td><td><b>" + fmtP(p.p) + "</b></td><td class='" + (a.stale ? "stale" : "") + "' title='" + esc(a.full) + "'>" + esc(a.txt) + "</td></tr>"; });
+  h += "</table><span style='color:#636b7a'>" + esc(s.region) + " · source: " + esc([...new Set(Object.values(s.P).filter(Boolean).map(p => p.src))].join(", ")) + "</span>";
+  if (s.lat != null) h += "<br><a target='_blank' rel='noopener' href='https://www.google.com/maps/dir/?api=1&destination=" + s.lat + "," + s.lon + "'>Directions</a>";
+  return h;
+}
+function initMap() {
+  if (map || !window.L || !L.markerClusterGroup || !D) return;
+  map = L.map("map", {preferCanvas: true, scrollWheelZoom: false, tap: false}).setView([54.5, -3.2], 5);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {maxZoom: 18, attribution: "&copy; OpenStreetMap contributors"}).addTo(map);
+  cluster = L.markerClusterGroup({chunkedLoading: true, showCoverageOnHover: false, disableClusteringAtZoom: 13, maxClusterRadius: 55,
+    iconCreateFunction: c => { const f = S.fuel; let mn = 1e9; for (const m of c.getAllChildMarkers()) { const p = m._s.P[f]; if (p && p.p < mn) mn = p.p; }
+      return L.divIcon({html: "<div class='cl' style='border-color:" + colour(frac(mn)) + "'>" + mn.toFixed(1) + "<small>" + c.getChildCount() + " stns</small></div>", className: "", iconSize: null}); }});
+  map.addLayer(cluster);
+  renderMap(true);
+}
+function marker(s) {
+  let m = markers[s.i];
+  if (!m) { m = markers[s.i] = L.circleMarker([s.lat, s.lon], {radius: 8, weight: 1, color: "#222", fillOpacity: .9}); m._s = s; m.bindPopup(() => popup(s)); m.bindTooltip(() => fmtP(s.P[S.fuel].p) + " " + s.brand); }
+  return m;
+}
+function renderMap(move) {
+  if (!map) return;
+  const f = S.fuel;
+  cluster.clearLayers();
+  const ms = [];
+  for (const s of list) { if (s.lat == null) continue; const m = marker(s); m.setStyle({fillColor: colour(frac(s.P[f].p))}); ms.push(m); }
+  cluster.addLayers(ms);
+  if (here) { here.remove(); here = null; }
+  if (S.place) {
+    here = L.circleMarker([S.place.lat, S.place.lon], {radius: 9, weight: 3, color: "#0b5cad", fillColor: "#fff", fillOpacity: 1}).bindTooltip(S.place.name).addTo(map);
+    if (move) map.setView([S.place.lat, S.place.lon], ZOOM[S.radius]);
+  } else if (move) map.setView([54.5, -3.2], 5);
+  window.__mapMarkers = ms.length;
+}
+function focus(s) {
+  if (s.lat == null) return;
+  $("mapCard").scrollIntoView({behavior: "smooth", block: "center"});
+  const go = () => { if (!map) return; cluster.zoomToShowLayer(markers[s.i] || marker(s), () => markers[s.i].openPopup()); };
+  if (map) go(); else { mapWanted = true; setTimeout(() => { initMap(); go(); }, 400); }
+}
+
+// ---------- start ----------
+window.__dataP.then(data => {
+  D = data; window.__perf = {dataMs: Math.round(performance.now() - window.__t0)};
+  const fu = D.fuels;
+  st = D.st.map((r, i) => {
+    const s = {i, name: r[0], addr: r[1], town: r[2], pc: r[3], lat: r[4], lon: r[5], brand: D.brands[r[6]], region: D.regions[r[7]], mw: r[8], P: {}};
+    fu.forEach((f, j) => { s.P[f] = dec(r[9 + j]); });
+    s.nation = s.region === "Wales" || s.region === "Scotland" || s.region === "Northern Ireland" ? s.region : "England";
+    s.hay = (s.brand + " " + s.name + " " + s.addr + " " + s.town + " " + s.pc + " " + s.pc.replace(/\s/g, "") + " " + s.region).toLowerCase();
+    return s;
+  });
+  const ageH = (Date.now() - new Date(D.generated)) / 36e5;
+  if (ageH > 4) { const sb = $("staleBanner"); sb.hidden = false; sb.textContent = "These prices were fetched " + (ageH < 48 ? Math.round(ageH) + " hours" : Math.round(ageH / 24) + " days") + " ago (" + D.generated_uk + "). The automatic refresh may have paused, so check the forecourt price."; }
+  const n = D.nations;
+  $("hdr").textContent = "Prices fetched " + D.generated_uk + " · " + D.counts.stations.toLocaleString() + " stations";
+  $("loading").remove(); ["content", "mapCard", "listCard", "srcCard"].forEach(id => $(id).hidden = false);
+  // sources
+  D.sources.forEach(s => { const li = document.createElement("li"); let cls, txt;
+    if (!s.ok) { cls = "fail"; txt = "✗ failed: " + s.error; } else if (s.used === false) { cls = "old"; txt = "⚠ " + s.note; }
+    else { cls = "ok"; txt = "✓ " + s.rows.toLocaleString() + " stations" + (s.uk_rows != null ? " (" + s.uk_rows + " used)" : "") + ", updated " + s.last_updated_uk; }
+    li.innerHTML = "<b>" + esc(s.name) + "</b> <span class='" + cls + "'>" + esc(txt) + "</span>"; $("srcList").appendChild(li); });
+  const c = D.counts;
+  $("footNote").textContent = "Covers " + Object.keys(n).map(k => k + " " + n[k].toLocaleString()).join(", ") + ". Fuel Finder is the government's legal price register: every UK forecourt must report price changes within 30 minutes. " +
+    "Duplicates across sources are merged by postcode and location; where a retailer feed is newer than Fuel Finder the newer price is shown. Stations only report when a price changes, so an older date usually means no change, but prices over 14 days old are shown in orange as worth checking. " +
+    c.rejected_prices + " obviously wrong prices were left out and " + c.closed_excluded + " closed stations are hidden. Regions are based on postcode areas, so border towns may sit in the neighbouring region. Always check the price on the forecourt.";
+  (D.rejected || []).forEach(r => { const li = document.createElement("li"); li.textContent = r.brand + " " + r.station + " (" + r.pc + "): " + (SHORT[r.fuel] || r.fuel) + " " + r.value.toFixed(1) + "p from " + r.src + " – " + r.why; $("rejList").appendChild(li); });
+  if (S.place) for (const s of st) s.d = s.lat != null ? miles(S.place.lat, S.place.lon, s.lat, s.lon) : null;
+  render(true);
+  window.__perf.renderMs = Math.round(performance.now() - window.__t0);
+  // map: build once it's near the screen
+  const start = () => { if (window.L && L.markerClusterGroup) initMap(); else setTimeout(start, 300); };
+  if ("IntersectionObserver" in window) { const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); start(); } }, {rootMargin: "300px"}); io.observe($("mapCard")); } else start();
+}).catch(e => { $("loading").innerHTML = "<span class='err'>Couldn't load the prices (" + esc(e.message) + "). Check your connection and reload.</span>"; });
+})();
+</script>
+</body>
+</html>

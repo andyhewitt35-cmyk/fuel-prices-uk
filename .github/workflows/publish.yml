@@ -1,0 +1,62 @@
+name: Refresh UK fuel prices and publish
+
+on:
+  schedule:
+    # every hour from 05:20 to 21:20 UTC (06:20-22:20 UK summer time, 05:20-21:20 winter)
+    - cron: "20 5-21 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch prices and build page
+        # Fuel Finder official CSV -> fuelfinder-archive mirror -> retailer feeds (built into the script)
+        run: python3 fetch_prices.py
+
+      - name: Assemble site
+        run: |
+          rm -rf _site && cp -r site _site
+          touch _site/.nojekyll
+          ls -la _site
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      # GitHub pauses scheduled workflows in repos with no commits for 60 days.
+      # A tiny commit every ~30 days keeps the hourly refresh alive.
+      - name: Keep schedule alive
+        if: github.event_name == 'schedule'
+        run: |
+          last=$(git log -1 --format=%ct)
+          if [ $(( $(date +%s) - last )) -gt $(( 30*86400 )) ]; then
+            date -u +%FT%TZ > .keepalive
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add .keepalive && git commit -m "keepalive" && git push
+          fi

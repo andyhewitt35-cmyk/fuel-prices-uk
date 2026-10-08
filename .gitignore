@@ -1,0 +1,6 @@
+shots/
+_site/
+node_modules/
+__pycache__/
+site/data.json
+site/data.json.tmp
